@@ -7,7 +7,8 @@ serialName = "COM5"
 
 print("porta COM aberta com sucesso")
 
-def send():
+def send(filename):
+
 
     com = enlace(serialName)
     com.enable()
@@ -17,7 +18,7 @@ def send():
     print ("gerando dados para transmissao :")
 
     ListTxBuffer =list()
-    with open("sent_image.png", "rb") as imageFile:
+    with open(filename, "rb") as imageFile:
         f = imageFile.read()
         txBuffer = bytearray(f)
     txLen    = len(txBuffer)
@@ -31,6 +32,9 @@ def send():
     print("Comunicação TX encerrada")
     print("-------------------------")
     com.disable()
+    start_time = time.time()
+    main()
+    print("--- %s seconds ---" % (time.time() - start_time))
 
-if __name__ == "__main__":
-    send()
+# if __name__ == "__main__":
+#     send()
