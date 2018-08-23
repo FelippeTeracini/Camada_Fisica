@@ -23,18 +23,21 @@ def send(filename):
         txBuffer = bytearray(f)
     txLen    = len(txBuffer)
 
+    tempo_teorico = str((txLen*10)/(com.fisica.baudrate))
+    print("Tempo teorico: " + tempo_teorico + " segundos")
+
     print("tentado transmitir .... {} bytes".format(txLen))
     com.sendData(txBuffer)
 
     txSize = com.tx.getStatus()
 
+
+
+
     print("-------------------------")
     print("Comunicação TX encerrada")
     print("-------------------------")
     com.disable()
-    start_time = time.time()
-    main()
-    print("--- %s seconds ---" % (time.time() - start_time))
 
 # if __name__ == "__main__":
 #     send()

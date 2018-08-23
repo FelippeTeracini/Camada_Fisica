@@ -11,6 +11,7 @@ import serial
 
 # importa pacote para conversão binário ascii
 import binascii
+import time
 
 #################################
 # Interface com a camada física #
@@ -48,6 +49,7 @@ class fisica(object):
     def flush(self):
         """ Clear serial data
         """
+
         self.port.flushInput()
         self.port.flushOutput()
 
@@ -71,9 +73,15 @@ class fisica(object):
         because the pyserial and arduino uses
         Software flow control between both
         sides of communication.
+
         """
+        start_time = time.time()
         nTx = self.port.write(self.encode(txBuffer))
+
         self.port.flush()
+        end_time = time.time()
+        total_time = end_time - start_time
+        print("Tempo estimado: " + str(total_time))
         return(nTx/2)
 
     def read(self, nBytes):
