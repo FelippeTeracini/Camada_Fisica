@@ -18,7 +18,7 @@ class RX(object):
     """ This class implements methods to handle the reception
         data over the p2p fox protocol
     """
-    
+
     def __init__(self, fisica):
         """ Initializes the TX class
         """
@@ -28,9 +28,9 @@ class RX(object):
         self.threadMutex = True
         self.READLEN     = 1024
 
-    def thread(self): 
+    def thread(self):
         """ RX thread, to send data in parallel with the code
-        essa é a funcao executada quando o thread é chamado. 
+        essa é a funcao executada quando o thread é chamado.
         """
         while not self.threadStop:
             if(self.threadMutex == True):
@@ -91,6 +91,7 @@ class RX(object):
         b           = self.buffer[0:nData]
         self.buffer = self.buffer[nData:]
         self.threadResume()
+
         return(b)
 
     def getNData(self):
@@ -100,16 +101,29 @@ class RX(object):
         """
 #        temPraLer = self.getBufferLen()
 #        print('leu %s ' + str(temPraLer) )
-        
+
         #if self.getBufferLen() < size:
             #print("ERROS!!! TERIA DE LER %s E LEU APENAS %s", (size,temPraLer))
         size = 0
-        while(self.getBufferLen() != size or size == 0):
-            
+        i = 0
+        counter = 0
+        eop = (EOP).to_bytes(12,byteorder="BIG")
+
+        while(checkeop!=eop or size == 0):
+
+            if size>12:
+
+                checkeop=self.buffer[i:i+11]
+
+                i=i+1
+                counter += 1
+
             time.sleep(0.4)
 
             size = self.getBufferLen()
-#                 
+
+
+#
         return(self.getBuffer(size))
 
 
@@ -117,5 +131,3 @@ class RX(object):
         """ Clear the reception buffer
         """
         self.buffer = b""
-
-
