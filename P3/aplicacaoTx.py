@@ -3,7 +3,7 @@ print("comecou Tx")
 from enlace import *
 import time
 
-serialName = "COM5"
+serialName = "COM6"
 
 print("porta COM aberta com sucesso")
 

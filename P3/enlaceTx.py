@@ -72,9 +72,10 @@ class TX(object):
         """
         EOP = 26090112
 
-        sizeMen = self.getBufferLen()
-        head = (sizeMen).to_bytes(12,byteorder="BIG")
-        eop = (EOP).to_bytes(12,byteorder="BIG")
+        sizeMen = len(self.buffer)
+        print(sizeMen)
+        head = (sizeMen).to_bytes(12,byteorder="big")
+        eop = (EOP).to_bytes(12,byteorder="big")
         mensagem = head+data+eop
 
         self.transLen   = 0

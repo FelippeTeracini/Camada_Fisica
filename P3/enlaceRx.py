@@ -27,6 +27,7 @@ class RX(object):
         self.threadStop  = False
         self.threadMutex = True
         self.READLEN     = 1024
+        self.EOP         = 26090112
 
     def thread(self):
         """ RX thread, to send data in parallel with the code
@@ -104,27 +105,57 @@ class RX(object):
 
         #if self.getBufferLen() < size:
             #print("ERROS!!! TERIA DE LER %s E LEU APENAS %s", (size,temPraLer))
-        size = 0
-        i = 0
-        counter = 0
-        eop = (EOP).to_bytes(12,byteorder="BIG")
-
-        while(checkeop!=eop or size == 0):
-
-            if size>12:
-
-                checkeop=self.buffer[i:i+11]
-
-                i=i+1
-                counter += 1
-
+        
+        size=0
+        while(self.getBufferLen() != size or size == 0):
+            
             time.sleep(0.4)
 
             size = self.getBufferLen()
 
+        mensagem = self.parseBuffer(self.getBuffer(size))
+#                 
+        return(mensagem)
 
-#
-        return(self.getBuffer(size))
+    def parseBuffer(self, buffer):
+
+        eop = self.EOP.to_bytes(12,byteorder="big")
+
+        found = False
+
+        if len(buffer)>24:
+            for i in range(len(buffer)):
+
+                if buffer[i:i+len(eop)] == eop:
+                    start_ofEop = i
+                    found = True
+
+            if found == True:
+                print("EOP encontrado no byte {}".format(start_ofEop))
+
+                head = buffer[0:11]
+
+                head_size = head[8:11]
+                int_size = int.from_bytes(head_size, byteorder="big")
+
+                mensagem = buffer[12:start_ofEop]
+
+                print(int_size)
+                print(len(mensagem))
+
+                if int_size == len(mensagem):
+                    print("TAMANHO CORRETO DE IMAGEM")
+                else:
+                    print("TAMANHO ERRADO DE IMAGEM")
+
+                overhead = len(buffer)/len(mensagem)
+                print("OVERHEAD = {}".format(overhead))
+
+                return mensagem
+            else:
+                print("ERRO - EOP nao encontrado")
+
+
 
 
     def clearBuffer(self):
