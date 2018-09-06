@@ -3,7 +3,7 @@ print("comecou Rx")
 from enlace import *
 import time
 
-serialName = "/dev/tty.usbmodem1441"
+serialName = "COM5"
 
 print("porta COM aberta com sucesso")
 

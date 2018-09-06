@@ -95,7 +95,7 @@ class RX(object):
 
         return(b)
 
-    def getNData(self):
+    def getNData(self,maxReceivingTime=0):
         """ Read N bytes of data from the reception buffer
 
         This function blocks until the number of bytes is received
@@ -106,16 +106,19 @@ class RX(object):
         #if self.getBufferLen() < size:
             #print("ERROS!!! TERIA DE LER %s E LEU APENAS %s", (size,temPraLer))
         size = 0
-        while(self.getBufferLen() != size or size == 0):
-
+        startTime=time.time
+        currentTime=time.time
+        while((self.getBufferLen() != size or size == 0) and ((maxReceivingTime == 0) or ((currentTime-startTime) < maxReceivingTime))):
+            
+            currentTime=time.time
             time.sleep(0.4)
 
             size = self.getBufferLen()
 
-        mensagem = self.parseBuffer(self.getBuffer(size))
+        mensagem, check_tamanho = self.parseBuffer(self.getBuffer(size))
         print(mensagem)
 #
-        return(mensagem)
+        return(mensagem, check_tamanho)
 
 
     def parseBuffer(self, buffer):
@@ -124,7 +127,9 @@ class RX(object):
 
         found = False
 
-        if len(buffer)>24:
+        check_tamanho = False
+
+        if len(buffer)>=24:
             for i in range(len(buffer)):
 
                 if buffer[i:i+len(eop)] == eop:
@@ -134,28 +139,66 @@ class RX(object):
             if found == True:
                 print("EOP encontrado no byte {}".format(start_ofEop))
 
-                head = buffer[0:11]
+                head = buffer[0:12]
 
-                head_size = head[8:11]
+                head_size = head[8:12]
                 int_size = int.from_bytes(head_size, byteorder="big")
 
                 head_type = head[7]
 
                 if head_type == 1:
 
-                    print("RECEBI TIPO 1")
+                    mensagem = buffer
+                    #print("RECEBI TIPO 1 NO PARSER")
+                    return mensagem, check_tamanho
+
+                if head_type == 2:
+
+                    mensagem = buffer
+                    #print("RECEBI TIPO 2 NO PARSER")
+                    return mensagem, check_tamanho
+                
+                if head_type == 3:
+
+                    mensagem = buffer
+                    #print("RECEBI TIPO 3 NO PARSER")
+                    return mensagem, check_tamanho
+
+                if head_type == 5:
+
+                    mensagem = buffer
+                    #print("RECEBI TIPO 5 NO PARSER")
+                    return mensagem, check_tamanho
+
+                if head_type == 6:
+
+                    mensagem = buffer
+                    #print("RECEBI TIPO 6 NO PARSER")
+                    return mensagem, check_tamanho
+
+                if head_type == 7:
+
+                    mensagem = buffer
+                    #print("RECEBI TIPO 6 NO PARSER")
+                    return mensagem, check_tamanho
+
+                
 
                 mensagem = buffer[12:start_ofEop]
 
                 if int_size == len(mensagem):
                     print("TAMANHO CORRETO DE IMAGEM")
+                    check_tamanho = True
                 else:
+                    check_tamanho = False
                     print("TAMANHO ERRADO DE IMAGEM")
+                    print("LEN MSG = {}".format(int_size))
+
 
                 overhead = len(buffer)/len(mensagem)
                 print("OVERHEAD = {}".format(overhead))
 
-                return mensagem
+                return mensagem, check_tamanho
             else:
                 print("ERRO - EOP nao encontrado")
 

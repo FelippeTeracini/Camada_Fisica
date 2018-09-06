@@ -55,30 +55,58 @@ class enlace(object):
         """
         synch=self.synchClient()
         if synch:
-            head = self.tx.makeHead(data, 4)
-            self.tx.sendBuffer(data, head)
+            time.sleep(1)
+            tipo_check = False
+
+            while not tipo_check:
+                # Envia tipo 4
+                print("##### ENVIANDO TIPO 4 #####")
+                head = self.tx.makeHead(data, 4)
+                self.tx.sendBuffer(data, head)
+
+                # Espera tipo 5/6
+                print("##### ESPERANDO TIPO 5/6 #####")
+                data_1, check = self.rx.getNData()
+                tipo = data_1[7]
+
+                if tipo == 5:
+                    print("##### RECEBI TIPO 5 ######")
+                    tipo_check = True
+                    break
+
+                if tipo == 6:
+                    print("##### RECEBI TIPO 6 ######")
+                    self.rx.clearBuffer()
+
+                else:
+                    print("##### NAO RECEBI TIPO 5 OU 6 ######")
+                    self.rx.clearBuffer()
+
+            print("##### ENVIANDO TIPO 7 #####")
+            self.sendFiller(7)
+            
+
+
+    def sendFiller(self, tipo):
+        fillerData = 0
+        fillerBuffer = fillerData.to_bytes(1, byteorder="big")
+        head = self.tx.makeHead(fillerBuffer, tipo)
+        self.tx.sendBuffer(fillerBuffer, head)
 
     def synchClient(self):
         tipo = 0
         # Envia Tipo 1
-        fillerData = 0
-        fillerBuffer = fillerData.to_bytes(1, byteorder="big")
-        head = self.tx.makeHead(fillerBuffer, 1)
-        self.tx.sendBuffer(fillerBuffer, head)
-        print("tipo 1 Enviado")
-
+        self.sendFiller(1)
+        print("##### TIPO 1 ENVIADO #####")
 
         # Recebe Tipo 2
-        data=self.rx.getNData()
-        tipo=data[6:8]
+        data, check=self.rx.getNData()
+        tipo=data[7]
 
         if tipo == 2:
             print("##### RECEBI TIPO 2 #####")
-            # Envia Tipo 1
-            fillerData = 0
-            fillerBuffer = fillerData.to_bytes(1, byteorder="big")
-            head = self.tx.makeHead(fillerBuffer, 3)
-            self.tx.sendBuffer(fillerBuffer, head)
+            # Envia Tipo 3
+            self.sendFiller(3)
             print("Tipo 3 enviado")
 
             return True
@@ -88,19 +116,16 @@ class enlace(object):
             return False
 
     def synchServer(self):
-        #recebe tipo 2
+        # Recebe tipo 1
         tipo = 0
-        data=self.rx.getNData()
-        tipo=data[6:8]
-        print(data)
+        data, check= self.rx.getNData()
+        tipo=data[7]
         if tipo == 1:
             print("###### Recebi tipo 1 ######")
-            fillerData = 0
-            fillerBuffer = fillerData.to_bytes(1, byteorder="big")
-            head = self.tx.makeHead(fillerBuffer, 2)
-            self.tx.sendBuffer(fillerBuffer, head)
+            # Envia tipo 2
+            self.sendFiller(2)
             print("Tipo 2 Enviado")
-            data=self.tx.getNData()
+            data, check =self.rx.getNData()
             tipo=data[7]
             if tipo == 3:
                 print("###### Recebi tipo 3 ######")
@@ -126,6 +151,26 @@ class enlace(object):
         synch = self.synchServer()
         if synch:
 
-            data = self.rx.getNData()
+            tipo_check = False
 
-        return(data, len(data))
+            while  not tipo_check:
+                print("##### ESPERANDO TIPO 4 #####")
+                data, check_tamanho = self.rx.getNData()
+                if check_tamanho:
+                    print("##### ENVIANDO TIPO 5 #####")
+                    self.sendFiller(5)
+                    tipo_check = True
+                    break
+                else:
+                    print("##### ENVIANDO TIPO 6 #####")
+                    self.sendFiller(6)
+            
+            print("##### ESPERANDO TIPO 7 #####")
+            data_7, check_tamanho = self.rx.getNData()
+            tipo = data_7[7]
+
+            if tipo == 7:
+                print("##### RECEBI TIPO 7 #####")
+
+
+            return(data, len(data))

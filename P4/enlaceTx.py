@@ -84,10 +84,12 @@ class TX(object):
 
     def makeHead(self, data, tipo):
 
+        generic = 0
         sizeMen = len(data)
-        headsize = (sizeMen).to_bytes(4,byteorder="big")
+        headfiller = generic.to_bytes(7,byteorder="big")
         headtipo = (tipo).to_bytes(1, byteorder="big")
-        head = headtipo+headsize
+        headsize = (sizeMen).to_bytes(4,byteorder="big")
+        head = headfiller+headtipo+headsize
 
         return head
 
