@@ -3,11 +3,11 @@ print("comecou Tx")
 from enlace import *
 import time
 
-serialName = "COM3"
+serialName = "/dev/tty.usbmodem1461"
 
 print("porta COM aberta com sucesso")
 
-def send(filename):
+def send(filename="sent_image.png"):
 
 
     com = enlace(serialName)
@@ -39,5 +39,5 @@ def send(filename):
     print("-------------------------")
     com.disable()
 
-# if __name__ == "__main__":
-#     send()
+if __name__ == "__main__":
+     send()

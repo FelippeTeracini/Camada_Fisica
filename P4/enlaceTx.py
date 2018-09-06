@@ -86,9 +86,8 @@ class TX(object):
 
         sizeMen = len(data)
         headsize = (sizeMen).to_bytes(4,byteorder="big")
-        headtipo = tipo.to_bytes(1, byteorder="big")
-        headfill = sizeMen.to_bytes(7, byteorder="big")
-        head = headfill+headtipo+headsize
+        headtipo = (tipo).to_bytes(1, byteorder="big")
+        head = headtipo+headsize
 
         return head
 
@@ -102,10 +101,9 @@ class TX(object):
         """
         #print("O tamanho transmitido. Impressao fora do thread {}" .format(self.transLen))
         return(self.transLen)
-        
+
 
     def getIsBussy(self):
         """ Return true if a transmission is ongoing
         """
         return(self.threadMutex)
-

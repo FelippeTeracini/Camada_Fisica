@@ -4,7 +4,7 @@ from tkinter import ttk
 from aplicacaoTx import *
 
 def filename():
-    root.fileName=filedialog.askopenfilename(filetypes=(("All files","*.*"),))
+    root.fileName=filedialog.askopenfilename(filetypes=(("JPg",".png"),))
     x=root.fileName
     send(x)
     exit()
