@@ -89,17 +89,18 @@ class TX(object):
             data = data[128:]
         return (pacote)
 
-    def makeHead(self, data, tipo, numero=0, total=0, esperado=0):
+    def makeHead(self, data, tipo, numero=0, total=0, esperado=0, resto=0):
 
         generic = 0
         sizeMen = len(data)
-        headfiller = generic.to_bytes(4,byteorder="big")
-        headesperado = (esperado).to_bytes(1,byteorder="big")
+        headfiller = generic.to_bytes(1,byteorder="big")
+        headesperado = (esperado).to_bytes(3,byteorder="big")
         headtipo = (tipo).to_bytes(1, byteorder="big")
         headsize = (sizeMen).to_bytes(4,byteorder="big")
         headnumero = (numero).to_bytes(1,byteorder="big")
         headtotalpac = (total).to_bytes(1,byteorder="big")
-        head = headfiller+headesperado+headnumero+headtotalpac+headtipo+headsize
+        headresto = (resto).to_bytes(1, byteorder="big")
+        head = headfiller+headresto+headesperado+headnumero+headtotalpac+headtipo+headsize
 
         return head
 

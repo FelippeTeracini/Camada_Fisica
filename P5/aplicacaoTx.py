@@ -3,12 +3,11 @@ print("comecou Tx")
 from enlace import *
 import time
 
-serialName = "COM5"
+serialName = "COM7"
 
 print("porta COM aberta com sucesso")
 
 def send(filename="sent_image.png"):
-
 
     com = enlace(serialName)
     com.enable()

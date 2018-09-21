@@ -9,6 +9,7 @@
 
 # Importa pacote de tempo
 import time
+import crcmod
 
 # Threads
 import threading
@@ -115,18 +116,23 @@ class RX(object):
 
             size = self.getBufferLen()
 
-        mensagem, check_tamanho, numero, total = self.parseBuffer(self.getBuffer(size))
+        mensagem, check_tamanho, numero, total, check_resto = self.parseBuffer(self.getBuffer(size))
         print(mensagem)
 
-        return(mensagem, check_tamanho, numero, total)
+        return(mensagem, check_tamanho, numero, total, check_resto)
 
+    def calculaCRC(self, data):
+        crc16_func = crcmod.mkCrcFun(0x104c1, initCrc=0, xorOut=0xFFFF)
+        resto = crc16_func(data)
+        print("RESTO = {}".format(resto))
+        return resto
 
     def parseBuffer(self, buffer):
 
         eop = self.EOP.to_bytes(12,byteorder="big")
 
         found = False
-
+        check_resto = False
         check_tamanho = False
         numero = 0
         total = 1
@@ -152,48 +158,65 @@ class RX(object):
 
                     mensagem = buffer
                     #print("RECEBI TIPO 1 NO PARSER")
-                    return mensagem, check_tamanho, numero, total
+                    return mensagem, check_tamanho, numero, total, check_resto
 
                 if head_type == 2:
 
                     mensagem = buffer
                     #print("RECEBI TIPO 2 NO PARSER")
-                    return mensagem, check_tamanho, numero, total
+                    return mensagem, check_tamanho, numero, total, check_resto
                 
                 if head_type == 3:
 
                     mensagem = buffer
                     #print("RECEBI TIPO 3 NO PARSER")
-                    return mensagem, check_tamanho, numero, total
+                    return mensagem, check_tamanho, numero, total, check_resto
 
                 if head_type == 5:
 
                     mensagem = buffer
                     #print("RECEBI TIPO 5 NO PARSER")
-                    return mensagem, check_tamanho, numero, total
+                    return mensagem, check_tamanho, numero, total, check_resto
 
                 if head_type == 6:
 
                     mensagem = buffer
                     #print("RECEBI TIPO 6 NO PARSER")
-                    return mensagem, check_tamanho, numero, total
+                    return mensagem, check_tamanho, numero, total, check_resto
 
                 if head_type == 7:
 
                     mensagem = buffer
                     #print("RECEBI TIPO 7 NO PARSER")
-                    return mensagem, check_tamanho, numero, total
+                    return mensagem, check_tamanho, numero, total, check_resto
 
                 if head_type == 8:
 
                     mensagem = buffer
                     #print("RECEBI TIPO 8 NO PARSER")
-                    return mensagem, check_tamanho, numero, total
+                    return mensagem, check_tamanho, numero, total, check_resto
+
+                if head_type == 9:
+
+                    mensagem = buffer
+                    #print("RECEBI TIPO 9 NO PARSER")
+                    return mensagem, check_tamanho, numero, total, check_resto
                 
 
                 mensagem = buffer[12:start_ofEop]
                 numero = buffer[5]
                 total = buffer[6]
+                resto_recebido = buffer[1:3]
+                resto_recebido_int = int.from_bytes(resto_recebido, byteorder="big")
+                print("RESTO RECEBIDO {}".format(resto_recebido))
+                resto = self.calculaCRC(mensagem)
+
+                if resto == resto_recebido:
+                    print("RESTO CORRETO")
+                    check_resto = True
+                else:
+                    print("RESTO INCORRIDO")
+                    check_resto = False
 
                 if int_size == len(mensagem):
                     print("TAMANHO CORRETO DE IMAGEM")
@@ -204,10 +227,10 @@ class RX(object):
                     print("LEN MSG = {}".format(int_size))
 
 
-                overhead = len(buffer)/len(mensagem)
-                print("OVERHEAD = {}".format(overhead))
+                #overhead = len(buffer)/len(mensagem)
+                #print("OVERHEAD = {}".format(overhead))
 
-                return mensagem, check_tamanho, numero, total
+                return mensagem, check_tamanho, numero, total, check_resto
             else:
                 print("ERRO - EOP nao encontrado")
 

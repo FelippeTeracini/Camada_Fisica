@@ -9,6 +9,7 @@
 
 # Importa pacote de tempo
 import time
+import crcmod
 
 # Construct Struct
 #from construct import *
@@ -50,6 +51,12 @@ class enlace(object):
     ################################
     # Application  interface       #
     ################################
+    def calculaCRC(self, data):
+        crc16_func = crcmod.mkCrcFun(0x104c1, initCrc=0, xorOut=0xFFFF)
+        resto = crc16_func(data)
+        print("RESTO = {}".format(resto))
+        return resto
+
     def sendData(self, data):
         """ Send data over the enlace interface
         """
@@ -63,31 +70,46 @@ class enlace(object):
             for i in range(len(dataslice)):
 
                 tipo_check = False
+                time.sleep(1)
 
                 while not tipo_check:
                     # Envia tipo 4
+                    time.sleep(1)
                     print("##### ENVIANDO TIPO 4 #####")
-
-                    head = self.tx.makeHead(dataslice[i], 4, i, len(dataslice)-1)
+                    resto = self.calculaCRC(dataslice[i])
+                    head = self.tx.makeHead(dataslice[i], 4, i, len(dataslice)-1, resto)
                     self.tx.sendBuffer(dataslice[i], head)
 
                     # Espera tipo 5/6
                     print("##### ESPERANDO TIPO 5/6 #####")
-                    data_1, check, numero, total= self.rx.getNData()
+                    data_1, check, numero, total, check_resto= self.rx.getNData()
                     tipo = data_1[7]
 
                     if tipo == 5:
                         print("##### RECEBI TIPO 5 ######")
                         tipo_check = True
+                        time.sleep(1)
                         break
 
                     if tipo == 6:
                         print("##### RECEBI TIPO 6 ######")
                         self.rx.clearBuffer()
+                        time.sleep(1)
+                    
+                    if tipo == 8:
+                        print("##### RECEBI TIPO 8 ######")
+                        self.rx.clearBuffer()
+                        time.sleep(1)
+
+                    if tipo == 9:
+                        print("##### RECEBI TIPO 9 ######")
+                        self.rx.clearBuffer()
+                        time.sleep(1)
 
                     else:
-                        print("##### NAO RECEBI TIPO 5 OU 6 OU 8######")
+                        print("##### NAO RECEBI TIPO 5 OU 6 OU 8 OU 9######")
                         self.rx.clearBuffer()
+                        time.sleep(1)
 
             print("##### ENVIANDO TIPO 7 #####")
             self.sendFiller(7)
@@ -110,7 +132,7 @@ class enlace(object):
         print("##### TIPO 1 ENVIADO #####")
 
         # Recebe Tipo 2
-        data, check, numero, total =self.rx.getNData()
+        data, check, numero, total, check_resto =self.rx.getNData()
         tipo=data[7]
 
         if tipo == 2:
@@ -128,14 +150,14 @@ class enlace(object):
     def synchServer(self):
         # Recebe tipo 1
         tipo = 0
-        data, check, numero, total = self.rx.getNData()
+        data, check, numero, total, check_resto = self.rx.getNData()
         tipo=data[7]
         if tipo == 1:
             print("###### Recebi tipo 1 ######")
             # Envia tipo 2
             self.sendFiller(2)
             print("Tipo 2 Enviado")
-            data, check, numero, total =self.rx.getNData()
+            data, check, numero, total, check_resto =self.rx.getNData()
             tipo=data[7]
             if tipo == 3:
                 print("###### Recebi tipo 3 ######")
@@ -172,8 +194,9 @@ class enlace(object):
                 count += 1
 
                 while  not tipo_check:
+                    time.sleep(1)
                     print("##### ESPERANDO TIPO 4 #####")
-                    data, check_tamanho, numero, total = self.rx.getNData()
+                    data, check_tamanho, numero, total, check_resto = self.rx.getNData()
                     print("NUMERO = {}".format(numero))
                     print("COUNT = {}".format(count))
                     if count == numero:
@@ -181,18 +204,25 @@ class enlace(object):
                     else:
                         numCheck = False
 
-                    if check_tamanho and numCheck:
+                    if check_tamanho and numCheck and check_resto:
                         print("##### ENVIANDO TIPO 5 #####")
+                        time.sleep(1)
                         self.sendFiller(5)
                         tipo_check = True
                         break
-                    else:
+                    elif check_tamanho and numCheck:
                         if numCheck:
                             print("##### ENVIANDO TIPO 6 #####")
+                            time.sleep(1)
                             self.sendFiller(6)
                         else:
                             print("##### ENVIANDO TIPO 8 #####")
+                            time.sleep(1)
                             self.sendFiller(8, count)
+                    else:
+                        print("##### ENVIANDO TIPO 9 #####")
+                        time.sleep(1)
+                        self.sendFiller(9)
 
                             
 
@@ -205,7 +235,8 @@ class enlace(object):
                     break
             
             print("##### ESPERANDO TIPO 7 #####")
-            data_7, check_tamanho, numero, total = self.rx.getNData()
+            time.sleep(1)
+            data_7, check_tamanho, numero, total, check_resto = self.rx.getNData()
             tipo = data_7[7]
 
             if tipo == 7:
